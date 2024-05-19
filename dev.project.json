@@ -1,0 +1,16 @@
+{
+    "name": "ZappyPlugin",
+    "tree": {
+      "$className": "DataModel",
+      "PluginDebugService" : {
+        "$className": "PluginDebugService",
+
+        "user_ZappyPlugin.rbxmx": {
+          "$className": "Plugin", 
+          "ZappyPlugin": {
+            "$path": "src"
+          }
+        }
+      }
+    }
+  }
