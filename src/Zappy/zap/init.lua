@@ -7,7 +7,7 @@ Gas - acomab
 
 ]]
 
-local init_zap = require(script.zappy)
+local init_zap = require(script.zapsynth)
 local memory
 
 
