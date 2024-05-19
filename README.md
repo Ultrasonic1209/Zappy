@@ -13,4 +13,9 @@ The plugin contains the same diagnostics as the playground, so you will still be
 
 ## Installation
 
-WIP
+1. Download the plugin from [GitHub Releases](https://github.com/Ultrasonic1209/Zappy/releases/latest).
+2. Open your plugins folder (WIN+R then enter `%localappdata%\Roblox\Plugins`, or click **Plugins Folder** inside Studio's Plugins ribbon).
+3. Copy the plugin you downloaded to your plugins folder.
+4. Relaunch Studio.
+
+Zappy should then appear along with all your other plugins.
