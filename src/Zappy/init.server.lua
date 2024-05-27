@@ -248,7 +248,7 @@ do --creates the Zappy plugin
 					-- give the UI a chance to update
 					task.wait()
 
-					local A,B,C = pcall(Zap, IDLInput:get())
+					local A,B,C = xpcall(Zap, function(err) return debug.traceback(err, 2) end, IDLInput:get())
 					if C then
 						A,B = B,C
 					end
