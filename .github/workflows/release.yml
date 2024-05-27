@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container:
+      image: crystallang/crystal:latest-alpine
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Aftman
+        uses: ok-nick/setup-aftman@v0.4.2
+
+      - name: Install dependencies
+        run: wally install
+
+      - name: Build project
+        run: rojo build ./build.project.json --output ZappyPlugin.rbxm
+
+      - name: Upload
+        uses: shogo82148/actions-upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ZappyPlugin.rbxm
+          asset_name: ZappyPlugin
+          asset_content_type: binary/octet-stream
