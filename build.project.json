@@ -1,0 +1,9 @@
+{
+    "name": "ZappyPlugin",
+    "tree": {
+      "$path": "src",
+      "Packages": {
+        "$path": "Packages"
+      }
+    }
+  }

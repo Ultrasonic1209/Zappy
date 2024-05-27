@@ -1,0 +1,32 @@
+name: Build Plugin
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - README.md
+      - LICENSE.md
+      - 'scripts/**'
+      - '.github/**'
+  workflow_dispatch:
+
+
+jobs:
+    build:
+      runs-on: ubuntu-latest
+  
+      steps:
+        - uses: actions/checkout@v4
+  
+        - name: Setup Aftman
+          uses: ok-nick/setup-aftman@v0.4.2
+
+        - name: Build project
+          run: rojo build ./build.project.json --output ZappyPlugin.rbxmx
+  
+        - name: Upload plugin
+          uses: actions/upload-artifact@v4
+          with:
+            name: ZappyPlugin
+            path: ZappyPlugin.rbxmx

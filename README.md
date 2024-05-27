@@ -11,14 +11,19 @@ The plugin contains the same diagnostics as the playground, so you will still be
 
 ![image](https://github.com/Ultrasonic1209/Zappy/assets/44583181/9b77c372-3024-4b75-a4f7-ad33f26c93aa)
 
-## Installation
+## Installing
 
-1. Download the plugin from [GitHub Releases](https://github.com/Ultrasonic1209/Zappy/releases/latest).
+1. Build or download the plugin from [GitHub Releases](https://github.com/Ultrasonic1209/Zappy/releases/latest).
 2. Open your plugins folder (WIN+R then enter `%localappdata%\Roblox\Plugins`, or click **Plugins Folder** inside Studio's Plugins ribbon).
 3. Copy the plugin you downloaded to your plugins folder.
 4. Relaunch Studio.
 
 Zappy should then appear along with all your other plugins.
+
+## Building
+
+1. Install Rojo with [Aftman](https://github.com/LPGhatguy/aftman) (`aftman install`) or [manually](https://rojo.space/docs/v7/getting-started/installation/)
+2. Run `rojo build ./build.project.json --output ZappyPlugin.rbxm`
 
 ## Logo
 Zappy's logo was sourced from [Twitter](https://github.com/twitter/twemoji/blob/master/assets/svg/26a1.svg) and is under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license. The colour of the logo was changed to a blue hue.
