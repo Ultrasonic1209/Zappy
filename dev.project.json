@@ -8,7 +8,10 @@
         "user_ZappyPlugin.rbxmx": {
           "$className": "Plugin", 
           "ZappyPlugin": {
-            "$path": "src"
+            "$path": "src",
+            "Packages": {
+              "$path": "Packages"
+            }
           }
         }
       }
