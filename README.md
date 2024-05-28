@@ -22,8 +22,8 @@ Zappy should then appear along with all your other plugins.
 
 ## Building
 
-1. Install Rojo with [Aftman](https://github.com/LPGhatguy/aftman) (`aftman install`) or [manually](https://rojo.space/docs/v7/getting-started/installation/)
-2. Run `rojo build ./build.project.json --output ZappyPlugin.rbxm`
+1. Install Rojo with [Aftman](https://github.com/LPGhatguy/aftman) (`aftman install`) or [manually](https://rojo.space/docs/v7/getting-started/installation/).
+2. Run `rojo build ./build.project.json --output ZappyPlugin.rbxm`.
 
 ## Logo
 Zappy's logo was sourced from [Twitter](https://github.com/twitter/twemoji/blob/master/assets/svg/26a1.svg) and is under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license. The colour of the logo was changed to a blue hue.
