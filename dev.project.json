@@ -5,7 +5,7 @@
       "PluginDebugService" : {
         "$className": "PluginDebugService",
 
-        "user_ZappyPlugin.rbxmx": {
+        "user_ZappyPlugin.rbxm": {
           "$className": "Plugin", 
           "ZappyPlugin": {
             "$path": "src",
