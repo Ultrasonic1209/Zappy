@@ -50,7 +50,6 @@ local TextInputAccented = require(StudioComponents.TextInputAccented)
 local VerticalCollapsibleSection = require(StudioComponents.VerticalCollapsibleSection)
 local Checkbox = require(StudioComponents.Checkbox)
 
-local Title = require(StudioComponents.Title)
 
 local Fusion = require(Packages.Fusion)
 
@@ -60,7 +59,6 @@ local Value = Fusion.Value
 local Children = Fusion.Children
 local OnChange = Fusion.OnChange
 local OnEvent = Fusion.OnEvent
-local Hydrate = Fusion.Hydrate
 local Observer = Fusion.Observer
 
 local function saveToScript(scriptName: string, scriptParent: Instance, source: string)
@@ -69,6 +67,11 @@ local function saveToScript(scriptName: string, scriptParent: Instance, source: 
 	ExportScript.Source = source
 end
 
+local function saveStringToScript(scriptName: string, scriptParent: Instance, source: string)
+	saveToScript(scriptName, scriptParent, `return [[{source}]]`)
+end
+
+
 local function loadFromScript(scriptName: string, scriptParent: Instance): string?
 	local ExportScript: ModuleScript = (scriptParent:FindFirstChild(scriptName) :: ModuleScript)
 	if not ExportScript then
@@ -76,6 +79,34 @@ local function loadFromScript(scriptName: string, scriptParent: Instance): strin
 	else
 		return ExportScript.Source
 	end
+end
+
+local function loadStringFromScript(scriptName: string, scriptParent: Instance): string?
+	local loadedScript = loadFromScript(scriptName, scriptParent)
+	if not loadedScript then
+		return nil
+	end
+
+	do
+		local s, _output = pcall(HttpService.JSONDecode, HttpService, loadedScript)
+
+		-- loadedScript would be just raw JSON so just return it
+		-- this is needed because of how older versions of the plugin saved settings
+		if s then
+			return loadedScript
+			--consumers still expect a string
+			--return _output 
+		end
+	end
+
+	do
+		local s, output = pcall(require, scriptParent[scriptName])
+		if s and typeof(output) == "string" then
+			return output
+		end
+	end
+
+	return nil
 end
 
 do --creates the Zappy plugin
@@ -153,7 +184,6 @@ do --creates the Zappy plugin
 	end)
 
 	local Busy = Value(false)
-	local Success = Value()
 
 	local Ready = Computed(function()
 		return not Busy:get()
@@ -167,7 +197,7 @@ do --creates the Zappy plugin
 
 	Plugin.Unloading:Connect(widgetsEnabledObserver:onChange(function()
 		if widgetsEnabled:get(false) then
-			local loaded = loadFromScript("__ZappySettings", ServerStorage)
+			local loaded = loadStringFromScript("__ZappySettings", ServerStorage)
 			if loaded then
 				local parsedSettings: {
 					IDL: string,
@@ -281,7 +311,7 @@ do --creates the Zappy plugin
 							}
 							local exported = HttpService:JSONEncode(zappySettings)
 
-							saveToScript("__ZappySettings", ServerStorage, exported)
+							saveStringToScript("__ZappySettings", ServerStorage, exported)
 
 						end
 					end
