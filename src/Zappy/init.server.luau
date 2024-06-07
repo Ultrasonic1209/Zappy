@@ -93,8 +93,8 @@ local function loadStringFromScript(scriptName: string, scriptParent: Instance):
 		-- loadedScript would be just raw JSON so just return it
 		-- this is needed because of how older versions of the plugin saved settings
 		if s then
+			--consumers still expect a string, so don't return parsed script
 			return loadedScript
-			--consumers still expect a string
 			--return _output 
 		end
 	end
