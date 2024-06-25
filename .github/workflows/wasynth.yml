@@ -33,6 +33,7 @@ jobs:
 
       - name: Download Wasynth
         uses: robinraju/release-downloader@v1.10
+        id: wasynth-dl
         with:
           repository: 'Rerumu/Wasynth'
           latest: true
@@ -48,7 +49,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/Zappy/zap/zapsynth.luau
-          git commit -m "Wasynth Action"
+          git commit -F- <<EOL
+          Wasynth Action
+
+          Generated Zap ${{steps.zap-dl.outputs.tag_name}}
+          Used Wasynth ${{steps.wasynth-dl.outputs.tag_name}}
+          EOL
           git push
 
       
