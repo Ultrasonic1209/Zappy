@@ -1,0 +1,53 @@
+name: Wasynth Action
+permissions:
+  contents: write
+
+on:
+  - workflow_dispatch
+
+jobs:
+  generate:
+
+    name: Generate Wasynth'd Zap
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Zap
+        uses: robinraju/release-downloader@v1.10
+        id: zap-dl
+        with:
+          repository: red-blox/zap
+          latest: true
+          fileName: zap-*-wasm.tgz
+          tarBall: false
+          zipBall: false
+
+      - name: Extract Zap
+        uses: a7ul/tar-action@v1.2.0
+        with:
+          command: x
+          files: ${{ fromJson(steps.zap-dl.outputs.downloaded_files)[0] }}
+          outPath: "-"
+
+      - name: Download Wasynth
+        uses: robinraju/release-downloader@v1.10
+        with:
+          repository: 'Rerumu/Wasynth'
+          latest: true
+          fileName: wasm2luau
+          tarBall: false
+          zipBall: false
+
+      - name: Generate and Push
+        run: |
+          chmod +x wasm2luau
+          ./wasm2luau package/zap_bg.wasm > src/Zappy/zap/zapsynth.luau
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Zappy/zap/zapsynth.luau
+          git commit -m "Wasynth Action"
+
+      
