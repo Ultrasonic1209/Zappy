@@ -49,5 +49,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/Zappy/zap/zapsynth.luau
           git commit -m "Wasynth Action"
+          git push
 
       
