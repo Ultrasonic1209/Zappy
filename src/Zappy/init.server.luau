@@ -47,10 +47,11 @@ local ScrollFrame = require(StudioComponents.ScrollFrame)
 local Label = require(StudioComponents.Label)
 local TextInput = require(StudioComponents.TextInput)
 local TextInputAccented = require(StudioComponents.TextInputAccented)
+local TextInputHighlighted = require(StudioComponents.TextInputHighlighted)
 local VerticalCollapsibleSection = require(StudioComponents.VerticalCollapsibleSection)
 local Checkbox = require(StudioComponents.Checkbox)
 
-
+local Highlighter = require(Packages.Highlighter)
 local Fusion = require(Packages.Fusion)
 
 local New = Fusion.New
@@ -348,7 +349,7 @@ do --creates the Zappy plugin
 					Label {
 						Text = "Client"
 					},
-					TextInput {
+					TextInputHighlighted {
 						Text = ClientOutput,
 						TextEditable = false,
 						ClearTextOnFocus = false,
@@ -362,7 +363,7 @@ do --creates the Zappy plugin
 					Label {
 						Text = "Server"
 					},
-					TextInput {
+					TextInputHighlighted {
 						Text = ServerOutput,
 						TextEditable = false,
 						ClearTextOnFocus = false,

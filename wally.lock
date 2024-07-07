@@ -3,11 +3,16 @@
 registry = "test"
 
 [[package]]
+name = "boatbomber/highlighter"
+version = "0.8.3"
+dependencies = []
+
+[[package]]
 name = "elttob/fusion"
 version = "0.2.0"
 dependencies = []
 
 [[package]]
 name = "ultrasonic1209/zappy"
-version = "0.1.2"
-dependencies = [["Fusion", "elttob/fusion@0.2.0"]]
+version = "0.1.7"
+dependencies = [["Fusion", "elttob/fusion@0.2.0"], ["Highlighter", "boatbomber/highlighter@0.8.3"]]
