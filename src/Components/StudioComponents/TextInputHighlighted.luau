@@ -61,23 +61,6 @@ return function(props: TextInputProperties): TextLabel
 	local absoluteTextBoxSize = Value(Vector2.zero)
 	local currentText = Value("")
 
-	local cursorPosition = Computed(function()
-		local text: string = currentText:get()
-		if isFocused:get() then
-			return #text + 1
-		else
-			return -1
-		end
-	end)
-	
-	local selectionStart = Computed(function()
-		if isFocused:get() then
-			return 1
-		else
-			return -1
-		end
-	end)
-
 	local textBox = New "TextBox" {
 		Name = "TextInput",
 		Size = UDim2.new(1, 0, 0, 25),
@@ -106,8 +89,21 @@ return function(props: TextInputProperties): TextLabel
 			return clearTextOnFocus and isEnabled
 		end),
 
-		CursorPosition = cursorPosition,
-		SelectionStart = selectionStart,
+		CursorPosition = Computed(function()
+			local text: string = currentText:get()
+			if isFocused:get() then
+				return #text + 1
+			else
+				return -1
+			end
+		end),
+		SelectionStart = Computed(function()
+			if isFocused:get() then
+				return 1
+			else
+				return -1
+			end
+		end),
 
 		--[Out "CursorPosition"] = cursorPosition,
 		--[Out "SelectionStart"] = selectionStart,
