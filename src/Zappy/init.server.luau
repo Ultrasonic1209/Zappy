@@ -198,6 +198,7 @@ do --creates the Zappy plugin
 	local ExportOutput = Value(false)
 	local ClientExportLocation = Value("ZapClient")
 	local ServerExportLocation = Value("ZapServer")
+	local ToolingExportLocation = Value("RemoteName.profiler")
 
 	local SaveSettings = Value(false)
 
@@ -265,6 +266,17 @@ do --creates the Zappy plugin
 				[Fusion.Out "Text"] = ServerExportLocation
 			},
 
+			Label {
+				Text = "Tooling export location",
+				Visible = ExportOutput,
+			},
+			TextInput {
+				PlaceholderText = "in game.ReplicatedStorage",
+				Visible = ExportOutput,
+				Text = ToolingExportLocation,
+				[Fusion.Out "Text"] = ToolingExportLocation
+			},
+
 			Checkbox {
 				Text = "Save settings on successful generation",
 				Value = SaveSettings
@@ -290,8 +302,6 @@ do --creates the Zappy plugin
 					end
 					local success, output = A,B
 
-					print(output)
-
 					if (not success) or (typeof(output) ~= "table") then
 						warn("Zap error:\n"..output)
 						ClientOutput:set("")
@@ -309,6 +319,9 @@ do --creates the Zappy plugin
 						if ExportOutput:get() then
 							saveToScript(ServerExportLocation:get(), ServerScriptService, output.server)
 							saveToScript(ClientExportLocation:get(), ReplicatedStorage, output.client)
+							if ToolingExists:get() then
+								saveToScript(ToolingExportLocation:get(), ReplicatedStorage, output.tooling)
+							end
 						end
 
 						if SaveSettings:get() then
