@@ -42,6 +42,7 @@ local get_return_code = funcs.__wbg_get_return_code
 local get_code_client = funcs.__wbg_get_code_client
 local get_code_server = funcs.__wbg_get_code_server
 local get_output_code = funcs.__wbg_get_output_code
+local get_code_tooling = funcs.__wbg_get_code_tooling
 
 
 
@@ -59,7 +60,8 @@ local function getCode(zap_code)
 	local output = {
 		diagnostics = "",
 		server = "",
-		client = ""
+		client = "",
+		tooling = ""
 	}
 	
 	do 
@@ -96,6 +98,7 @@ local function getCode(zap_code)
 	
 		local client_output = get_code_client(code)
 		local server_output = get_code_server(code)
+		local tooling_output = get_code_tooling(code)
 
 		do
 			get_output_code(string_alloc, client_output)
@@ -123,6 +126,22 @@ local function getCode(zap_code)
 
 			free(data, len, 1)
 			funcs.__wbg_output_free(server_output)
+		end
+		
+		if tooling_output ~= 0 then
+			do
+				get_output_code(string_alloc, tooling_output)
+
+				-- Obtain the pointer to the string's data and the string's length
+				local data = buffer.readu32(memory.data, string_alloc)
+				local len = buffer.readu32(memory.data, string_alloc + 4)
+
+				-- Read the output code string from the buffer and print it
+				output.tooling = buffer.readstring(memory.data, data, len)
+
+				free(data, len, 1)
+				funcs.__wbg_output_free(tooling_output)
+			end
 		end
 		
 		code_free(code)

@@ -184,6 +184,11 @@ do --creates the Zappy plugin
 		return Diagnostics:get() ~= ""
 	end)
 
+	local ToolingOutput = Value("")
+	local ToolingExists = Computed(function()
+		return ToolingOutput:get() ~= ""
+	end)
+
 	local Busy = Value(false)
 
 	local Ready = Computed(function()
@@ -285,6 +290,8 @@ do --creates the Zappy plugin
 					end
 					local success, output = A,B
 
+					print(output)
+
 					if (not success) or (typeof(output) ~= "table") then
 						warn("Zap error:\n"..output)
 						ClientOutput:set("")
@@ -294,6 +301,7 @@ do --creates the Zappy plugin
 						ClientOutput:set(output.client)
 						ServerOutput:set(output.server)
 						Diagnostics:set(output.diagnostics)
+						ToolingOutput:set(output.tooling)
 					end
 
 					if (not DiagnosticsExists:get()) then
@@ -365,6 +373,21 @@ do --creates the Zappy plugin
 					},
 					TextInputHighlighted {
 						Text = ServerOutput,
+						TextEditable = false,
+						ClearTextOnFocus = false,
+						MultiLine = true,
+						AutomaticSize = Enum.AutomaticSize.Y,
+						TextXAlignment = Enum.TextXAlignment.Left,
+						Font = Enum.Font.Code,
+					},
+
+					Label {
+						Text = "Tooling",
+						Visible = ToolingExists
+					},
+					TextInputHighlighted {
+						Text = ToolingOutput,
+						Visible = ToolingExists,
 						TextEditable = false,
 						ClearTextOnFocus = false,
 						MultiLine = true,
