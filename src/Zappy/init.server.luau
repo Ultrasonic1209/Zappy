@@ -101,7 +101,7 @@ local function loadStringFromScript(scriptName: string, scriptParent: Instance):
 	end
 
 	do
-		local s, output = pcall(require, scriptParent[scriptName])
+		local s, output = pcall(require, (scriptParent[scriptName] :: ModuleScript):Clone())
 		if s and typeof(output) == "string" then
 			return output
 		end
@@ -210,7 +210,8 @@ do --creates the Zappy plugin
 					IDL: string,
 					ExportOutput: boolean,
 					ServerExportLocation: string,
-					ClientExportLocation: string
+					ClientExportLocation: string,
+					ToolingExportLocation: string?
 				} = HttpService:JSONDecode(loaded)
 				SaveSettings:set(true)
 
@@ -218,6 +219,9 @@ do --creates the Zappy plugin
 				ExportOutput:set(parsedSettings.ExportOutput)
 				ServerExportLocation:set(parsedSettings.ServerExportLocation)
 				ClientExportLocation:set(parsedSettings.ClientExportLocation)
+				if parsedSettings.ToolingExportLocation ~= nil then
+					ToolingExportLocation:set(parsedSettings.ToolingExportLocation)
+				end
 			end
 		end
 	end))
@@ -329,7 +333,8 @@ do --creates the Zappy plugin
 								IDL = IDLInput:get(),
 								ExportOutput = ExportOutput:get(),
 								ServerExportLocation = ServerExportLocation:get(),
-								ClientExportLocation = ClientExportLocation:get()
+								ClientExportLocation = ClientExportLocation:get(),
+								ToolingExportLocation = ToolingExportLocation:get()
 							}
 							local exported = HttpService:JSONEncode(zappySettings)
 
