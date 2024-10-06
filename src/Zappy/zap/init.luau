@@ -46,13 +46,13 @@ local get_code_tooling = funcs.__wbg_get_code_tooling
 
 
 
-local function getCode(zap_code)
+local function getCode(zap_code: string, no_warnings: boolean)
 	-- Allocate space for the zap code in wasm memory and write the zap code to the buffer
 	local zap_code_inmem = malloc(#zap_code, 1)
 	buffer.writestring(memory.data, zap_code_inmem, zap_code, #zap_code)
 
 	-- Call zap's run function with the pointer to the zap code
-	local run_return = run(zap_code_inmem, #zap_code)
+	local run_return = run(zap_code_inmem, #zap_code, if no_warnings then 1 else 0)
 
 	-- allocate a String for: diagnostics, client output code, server output code  | unsure why it's 16
 	local string_alloc = malloc(16, 1)

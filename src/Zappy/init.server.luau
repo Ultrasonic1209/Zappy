@@ -195,6 +195,8 @@ do --creates the Zappy plugin
 		return not Busy:get()
 	end)
 
+	local NoWarnings = Value(false)
+
 	local ExportOutput = Value(false)
 	local ClientExportLocation = Value("ZapClient")
 	local ServerExportLocation = Value("ZapServer")
@@ -208,6 +210,7 @@ do --creates the Zappy plugin
 			if loaded then
 				local parsedSettings: {
 					IDL: string,
+					NoWarnings: boolean?,
 					ExportOutput: boolean,
 					ServerExportLocation: string,
 					ClientExportLocation: string,
@@ -221,6 +224,9 @@ do --creates the Zappy plugin
 				ClientExportLocation:set(parsedSettings.ClientExportLocation)
 				if parsedSettings.ToolingExportLocation ~= nil then
 					ToolingExportLocation:set(parsedSettings.ToolingExportLocation)
+				end
+				if parsedSettings.NoWarnings ~= nil then
+					NoWarnings:set(parsedSettings.NoWarnings)
 				end
 			end
 		end
@@ -242,6 +248,10 @@ do --creates the Zappy plugin
 
 				Text = IDLInput,
 				[Fusion.Out "Text"] = IDLInput
+			},
+			Checkbox {
+				Text = "Disable Warnings",
+				Value = NoWarnings
 			},
 			Checkbox {
 				Text = "Auto-export output",
@@ -300,7 +310,7 @@ do --creates the Zappy plugin
 					-- give the UI a chance to update
 					task.wait()
 
-					local A,B,C = xpcall(Zap, function(err) return debug.traceback(err, 2) end, IDLInput:get())
+					local A,B,C = xpcall(Zap, function(err) return debug.traceback(err, 2) end, IDLInput:get(), NoWarnings:get())
 					if C then
 						A,B = B,C
 					end
@@ -318,8 +328,8 @@ do --creates the Zappy plugin
 						ToolingOutput:set(output.tooling)
 					end
 
-					if (not DiagnosticsExists:get()) then
-
+					
+					if not ((ServerOutput:get()=="") or (ClientOutput:get()=="")) then
 						if ExportOutput:get() then
 							saveToScript(ServerExportLocation:get(), ServerScriptService, output.server)
 							saveToScript(ClientExportLocation:get(), ReplicatedStorage, output.client)
@@ -331,6 +341,7 @@ do --creates the Zappy plugin
 						if SaveSettings:get() then
 							local zappySettings = {
 								IDL = IDLInput:get(),
+								NoWarnings = NoWarnings:get(),
 								ExportOutput = ExportOutput:get(),
 								ServerExportLocation = ServerExportLocation:get(),
 								ClientExportLocation = ClientExportLocation:get(),
@@ -339,7 +350,6 @@ do --creates the Zappy plugin
 							local exported = HttpService:JSONEncode(zappySettings)
 
 							saveStringToScript("__ZappySettings", ServerStorage, exported)
-
 						end
 					end
 
