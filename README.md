@@ -5,11 +5,11 @@ The UI is made with a lightly modified version of [PluginEssentials](https://git
 ## Features
 With [valid IDL](https://zap.redblox.dev/intro/getting-started.html#writing-your-first-network-description) input, you will get the client and server code emitted by Zap after clicking Generate. You also have the option of having the code be automatically sent to your game to save you the hassle of copy-pasting. Server code can be exported to `ServerScriptService` and client (+ tooling, [if you have it enabled](https://zap.redblox.dev/config/options.html#tooling)) code can be exported to `ReplicatedStorage`.
 
-![image](https://github.com/user-attachments/assets/3b0dc8b3-cc25-46c8-8579-dd1df5fefe09)
+![image](https://github.com/user-attachments/assets/b09d2a1f-722a-4d1f-bab7-4a5e181a388b)
 
 The plugin contains the same diagnostics as the playground, so you will still benefit from the same helpful error messages that Zap has to offer.
 
-![image](https://github.com/Ultrasonic1209/Zappy/assets/44583181/9b77c372-3024-4b75-a4f7-ad33f26c93aa)
+![image](https://github.com/user-attachments/assets/129d4350-e556-4986-8859-e829e6ca874d)
 
 ## Installing
 
@@ -22,7 +22,7 @@ Zappy should then appear along with all your other plugins.
 
 ## Building
 
-1. Install Rojo with [Aftman](https://github.com/LPGhatguy/aftman) (`aftman install`) or [manually](https://rojo.space/docs/v7/getting-started/installation/).
+1. Install Rojo with [Aftman](https://github.com/LPGhatguy/aftman) (`aftman install`), [Rokit](https://github.com/rojo-rbx/rokit) (`rokit install`) or [manually](https://rojo.space/docs/v7/getting-started/installation/).
 2. Run `rojo build ./build.project.json --output ZappyPlugin.rbxm`.
 
 ## Logo
