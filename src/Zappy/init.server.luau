@@ -27,6 +27,8 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local CollectionService = game:GetService("CollectionService")
+local VisibilityCheckDispatcher = game:GetService("VisibilityCheckDispatcher")
 
 local Plugin = plugin
 
@@ -62,10 +64,11 @@ local OnChange = Fusion.OnChange
 local OnEvent = Fusion.OnEvent
 local Observer = Fusion.Observer
 
-local function saveToScript(scriptName: string, scriptParent: Instance, source: string)
+local function saveToScript(scriptName: string, scriptParent: Instance, source: string): ModuleScript
 	local ExportScript: ModuleScript = (scriptParent:FindFirstChild(scriptName) :: ModuleScript) or Instance.new("ModuleScript", scriptParent)
 	ExportScript.Name = scriptName
 	ExportScript.Source = source
+	return ExportScript
 end
 
 local function saveStringToScript(scriptName: string, scriptParent: Instance, source: string)
@@ -174,10 +177,112 @@ do --creates the Zappy plugin
 		}
 	end
 
+	local function NestedElement(children: { {[any]: any} })
+		local centeredChildren = {}
+		for _, element in children do
+			element.Position = UDim2.fromScale(0.5, 0.5)
+			element.AnchorPoint = Vector2.new(0.5, 0.5)
+			element.Size = UDim2.new(0.9, 0, 0, 30)
+			table.insert(centeredChildren, element)
+		end
+		return New "Frame" {
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 0, 30),
+			[Children] = centeredChildren,
+		}
+	end
+
+	local function SmallDescriptionLabel(text: string)
+		return Label {
+			Text = text,
+			Size = UDim2.new(1, 0, 0, 14),
+		}
+	end
+
 	local IDLInput = Value("")
 
 	local ServerOutput = Value("")
 	local ClientOutput = Value("")
+	local ExportOutput = Value(false)
+
+	local ClientExportScriptName = Value("ZapClient")
+	local ServerExportScriptName = Value("ZapServer")
+	local ToolingExportScriptName = Value("RemoteName.profiler")
+
+	local ClientExportInstance = Value()
+	local ServerExportInstance = Value()
+	local ToolingExportInstance = Value()
+
+	local CurrentSelectionName = Value()
+
+	-- update client and server export instances every duration bc Fusion v0.2 state management is really annoying?
+	task.spawn(function()
+		while task.wait(0.125) do
+			local clientTaggedInstances: { Instance } = CollectionService:GetTagged("ZAPPY_CLIENT_PARENT_INSTANCE")
+			local serverTaggedInstances: { Instance } = CollectionService:GetTagged("ZAPPY_SERVER_PARENT_INSTANCE")
+			local toolingTaggedInstances: { Instance } = CollectionService:GetTagged("ZAPPY_TOOLING_PARENT_INSTANCE")
+
+			local selectedInstances = game:GetService("Selection"):Get()
+
+			ClientExportInstance:set(
+				if #clientTaggedInstances == 0 then ReplicatedStorage
+				elseif #clientTaggedInstances == 1 then clientTaggedInstances[1] 
+				else nil
+			)
+
+			ServerExportInstance:set(
+				if #serverTaggedInstances == 0 then ServerScriptService
+				elseif #serverTaggedInstances == 1 then serverTaggedInstances[1]
+				else nil
+			)
+
+			ToolingExportInstance:set(
+				if #toolingTaggedInstances == 0 then ReplicatedStorage
+				elseif #toolingTaggedInstances == 1 then toolingTaggedInstances[1]
+				else nil
+			)
+
+			CurrentSelectionName:set(
+				if selectedInstances and #selectedInstances == 1 then selectedInstances[1]:GetFullName()
+				else ""
+			)
+		end
+	end)
+
+	local CurrentClientExportInstanceText = Computed(function()
+		return "Client Export Location: " .. (
+			if ClientExportInstance:get() ~= nil then `{ClientExportInstance:get():GetFullName()}["{ClientExportScriptName:get()}"]` 
+			else "(unset; please set with 'Set ClientExportInstance' button)"
+		)
+	end)
+	local CurrentServerExportInstanceText = Computed(function()
+		return "Server Export Location: " .. (
+			if ServerExportInstance:get() ~= nil then `{ServerExportInstance:get():GetFullName()}["{ServerExportScriptName:get()}"]` 
+			else "(unset; please set with 'Set ServerExportInstance' button)"
+		)
+	end)
+	local CurrentToolingExportInstanceText = Computed(function()
+		return "Tooling Export Location: " .. (
+			if ToolingExportInstance:get() ~= nil then `{ToolingExportInstance:get():GetFullName()}["{ToolingExportScriptName:get()}"]` 
+			else "(unset; please set with 'Set ServerExportInstance' button)"
+		)
+	end)
+
+	local ClientExportButtonHovering = Value(false)
+	local ClientExportButtonColor = Computed(function()
+		return if ClientExportButtonHovering:get() == true then Color3.fromHex("#544096")
+		else Color3.fromHex("#44337c")
+	end)
+	local ServerExportButtonHovering = Value(false)
+	local ServerExportButtonColor = Computed(function()
+		return if ServerExportButtonHovering:get() == true then Color3.fromHex("#2aac7a")
+		else Color3.fromHex("#288360")
+	end)
+	local ToolingExportButtonHovering = Value(false)
+	local ToolingExportButtonColor = Computed(function()
+		return if ToolingExportButtonHovering:get() == true then Color3.fromHex("#366e83")
+		else Color3.fromHex("#294f5d")
+	end)
 
 	local Diagnostics = Value("")
 	local DiagnosticsExists = Computed(function()
@@ -196,13 +301,9 @@ do --creates the Zappy plugin
 	end)
 
 	local NoWarnings = Value(false)
-
-	local ExportOutput = Value(false)
-	local ClientExportLocation = Value("ZapClient")
-	local ServerExportLocation = Value("ZapServer")
-	local ToolingExportLocation = Value("RemoteName.profiler")
-
 	local SaveSettings = Value(false)
+
+	local ReparentExportedScriptsWhenOutputPathChanges = Value(false)
 
 	Plugin.Unloading:Connect(widgetsEnabledObserver:onChange(function()
 		if widgetsEnabled:get(false) then
@@ -212,18 +313,18 @@ do --creates the Zappy plugin
 					IDL: string,
 					NoWarnings: boolean?,
 					ExportOutput: boolean,
-					ServerExportLocation: string,
-					ClientExportLocation: string,
-					ToolingExportLocation: string?
+					ServerExportScriptName: string,
+					ClientExportScriptName: string,
+					ToolingExportScriptName: string?
 				} = HttpService:JSONDecode(loaded)
 				SaveSettings:set(true)
 
 				IDLInput:set(parsedSettings.IDL)
 				ExportOutput:set(parsedSettings.ExportOutput)
-				ServerExportLocation:set(parsedSettings.ServerExportLocation)
-				ClientExportLocation:set(parsedSettings.ClientExportLocation)
-				if parsedSettings.ToolingExportLocation ~= nil then
-					ToolingExportLocation:set(parsedSettings.ToolingExportLocation)
+				ServerExportScriptName:set(parsedSettings.ServerExportScriptName)
+				ClientExportScriptName:set(parsedSettings.ClientExportScriptName)
+				if parsedSettings.ToolingExportScriptName ~= nil then
+					ToolingExportScriptName:set(parsedSettings.ToolingExportScriptName)
 				end
 				if parsedSettings.NoWarnings ~= nil then
 					NoWarnings:set(parsedSettings.NoWarnings)
@@ -250,57 +351,237 @@ do --creates the Zappy plugin
 				[Fusion.Out "Text"] = IDLInput
 			},
 			Checkbox {
-				Text = "Disable Warnings",
+				Text = "Disable warnings",
 				Value = NoWarnings
+			},
+			Checkbox {
+				Text = "Save settings on successful generation",
+				Value = SaveSettings
 			},
 			Checkbox {
 				Text = "Auto-export output",
 				Value = ExportOutput
 			},
-
-			Label {
-				Text = "Client export location",
+			VerticalCollapsibleSection {
+				Text = "Output Settings",
 				Visible = ExportOutput,
-			},
-			TextInput {
-				PlaceholderText = "in game.ReplicatedStorage",
-				Visible = ExportOutput,
-				Text = ClientExportLocation,
-				[Fusion.Out "Text"] = ClientExportLocation
-			},
-
-			Label {
-				Text = "Server export location",
-				Visible = ExportOutput,
-			},
-			TextInput {
-				PlaceholderText = "in game.ServerScriptService",
-				Visible = ExportOutput,
-				Text = ServerExportLocation,
-				[Fusion.Out "Text"] = ServerExportLocation
-			},
-
-			Label {
-				Text = "Tooling export location",
-				Visible = ExportOutput,
-			},
-			TextInput {
-				PlaceholderText = "in game.ReplicatedStorage",
-				Visible = ExportOutput,
-				Text = ToolingExportLocation,
-				[Fusion.Out "Text"] = ToolingExportLocation
-			},
-
-			Checkbox {
-				Text = "Save settings on successful generation",
-				Value = SaveSettings
-			},
+				[Children] = {
+					Checkbox {
+						Text = "Reparent previously exported ModuleScripts when output path changes",
+						Value = ReparentExportedScriptsWhenOutputPathChanges,
+					},
+					VerticalCollapsibleSection {
+						Text = "Client Output",
+						Visible = ExportOutput,
+						[Children] = {
+							Label {
+								Text = CurrentClientExportInstanceText,
+								Visible = ExportOutput,
+							},
+							NestedElement {
+								TextInput {
+									PlaceholderText = "Script Name",
+									Visible = ExportOutput,
+									Text = ClientExportScriptName,
+									[Fusion.Out "Text"] = ClientExportScriptName,
+								}
+							},
+							SmallDescriptionLabel "Set custom client output path",
+							NestedElement {
+								New "TextButton" {
+									Name = "ClientExportLocationPickerButton",
+									RichText = true,
+									Text = Computed(function()
+										return if CurrentSelectionName:get() ~= "" 
+											then `Change {ClientExportScriptName:get()}.Parent to: <b>{CurrentSelectionName:get()}</b>` 
+											else `Select instance to set as {ClientExportScriptName:get()}.Parent`
+									end),
+									Visible = ExportOutput,
+									BackgroundColor3 = ClientExportButtonColor, -- purple for client
+									TextColor3 = Color3.fromRGB(240, 240, 240),
+									Size = UDim2.new(0.9, 0, 0, 30),
+									[OnEvent "Activated"] = function()
+										if CurrentSelectionName:get() ~= "" then
+											local selectedInstance = game:GetService("Selection"):Get()[1]
+											if selectedInstance then
+												local oldClientLocations = CollectionService:GetTagged("ZAPPY_CLIENT_PARENT_INSTANCE")
+												for _, location in oldClientLocations do
+													location:RemoveTag("ZAPPY_CLIENT_PARENT_INSTANCE")
+													if ReparentExportedScriptsWhenOutputPathChanges:get() == true then
+														-- we only want to reparent objects of the previous parent; it's possible users could have multiple locations
+														-- they want to export specific code to, so if we use CollectionService:GetTagged() to move all scripts
+														-- we would break that workflow
+														for _, child in location:GetChildren() do 
+															if child:HasTag("ZAPPY_CLIENT_SCRIPT") then
+																child.Parent = selectedInstance
+															end
+														end
+													end
+												end
+												selectedInstance:AddTag("ZAPPY_CLIENT_PARENT_INSTANCE")
+												ClientExportInstance:set(selectedInstance)
+											end
+										end
+									end,
+									[OnEvent "MouseEnter"] = function()
+										ClientExportButtonHovering:set(true)
+									end,
+									[OnEvent "MouseLeave"] = function()
+										ClientExportButtonHovering:set(false)
+									end,
+									[Children] = {
+										New "UICorner" {
+											CornerRadius = UDim.new(0, 6)
+										},
+									},
+								},
+							},
+						},
+					},
+					VerticalCollapsibleSection {
+						Text = "Server Output",
+						Visible = ExportOutput,
+						[Children] = {
+							Label {
+								Text = CurrentServerExportInstanceText,
+								Visible = ExportOutput,
+							},
+							NestedElement {
+								TextInput {
+									PlaceholderText = "Script Name",
+									Visible = ExportOutput,
+									Text = ServerExportScriptName,
+									[Fusion.Out "Text"] = ServerExportScriptName
+								},
+							},
+							SmallDescriptionLabel "Set custom server output path",
+							NestedElement {
+								New "TextButton" {
+									Name = "ServerExportLocationPickerButton",
+									RichText = true,
+									Text = Computed(function()
+										return if CurrentSelectionName:get() ~= "" 
+											then `Change {ServerExportScriptName:get()}.Parent to: <b>{CurrentSelectionName:get()}</b>` 
+											else `Select instance to set as {ServerExportScriptName:get()}.Parent`
+									end),
+									Size = UDim2.new(0.9, 0, 0, 30),
+									Visible = ExportOutput,
+									BackgroundColor3 = ServerExportButtonColor, -- green for server
+									TextColor3 = Color3.fromRGB(240, 240, 240),
+									[OnEvent "Activated"] = function()
+										if CurrentSelectionName:get() ~= "" then
+											local selectedInstance = game:GetService("Selection"):Get()[1]
+											if selectedInstance then
+												local oldServerLocations = CollectionService:GetTagged("ZAPPY_SERVER_PARENT_INSTANCE")
+												for _, location in oldServerLocations do
+													location:RemoveTag("ZAPPY_SERVER_PARENT_INSTANCE")
+													if ReparentExportedScriptsWhenOutputPathChanges:get() == true then
+														-- we only want to reparent objects of the previous parent; it's possible users could have multiple locations
+														-- they want to export specific code to, so if we use CollectionService:GetTagged() to move all scripts
+														-- we would break that workflow
+														for _, child in location:GetChildren() do 
+															if child:HasTag("ZAPPY_SERVER_SCRIPT") then
+																child.Parent = selectedInstance
+															end
+														end
+													end
+												end
+												selectedInstance:AddTag("ZAPPY_SERVER_PARENT_INSTANCE")
+												ServerExportInstance:set(selectedInstance)
+											end
+										end
+									end,
+									[OnEvent "MouseEnter"] = function()
+										ServerExportButtonHovering:set(true)
+									end,
+									[OnEvent "MouseLeave"] = function()
+										ServerExportButtonHovering:set(false)
+									end,
+									[Children] = {
+										New "UICorner" {
+											CornerRadius = UDim.new(0, 6)
+										},
+									},
+								},
+							},
+						},
+					},
+					VerticalCollapsibleSection {
+						Text = "Tooling Output",
+						Visible = ExportOutput,
+						[Children] = {
+							Label {
+								Text = CurrentToolingExportInstanceText,
+								Visible = ExportOutput,
+							},
+							NestedElement {
+								TextInput {
+									PlaceholderText = "Script Name",
+									Visible = ExportOutput,
+									Text = ToolingExportScriptName,
+									[Fusion.Out "Text"] = ToolingExportScriptName
+								},
+							},
+							SmallDescriptionLabel "Set custom tooling output path",
+							NestedElement {
+								New "TextButton" {
+									Name = "ToolingExportLocationPickerButton",
+									RichText = true,
+									Text = Computed(function()
+										return if CurrentSelectionName:get() ~= "" 
+											then `Change {ToolingExportScriptName:get()}.Parent to: <b>{CurrentSelectionName:get()}</b>` 
+											else `Select instance to set as {ToolingExportScriptName:get()}.Parent`
+									end),
+									Size = UDim2.new(0.9, 0, 0, 30),
+									Visible = ExportOutput,
+									BackgroundColor3 = ToolingExportButtonColor,
+									TextColor3 = Color3.fromRGB(240, 240, 240),
+									[OnEvent "Activated"] = function()
+										if CurrentSelectionName:get() ~= "" then
+											local selectedInstance = game:GetService("Selection"):Get()[1]
+											if selectedInstance then
+												local oldToolingLocations = CollectionService:GetTagged("ZAPPY_TOOLING_PARENT_INSTANCE")
+												for _, location in oldToolingLocations do
+													location:RemoveTag("ZAPPY_TOOLING_PARENT_INSTANCE")
+													if ReparentExportedScriptsWhenOutputPathChanges:get() == true then
+														-- we only want to reparent objects of the previous parent; it's possible users could have multiple locations
+														-- they want to export specific code to, so if we use CollectionService:GetTagged() to move all scripts
+														-- we would break that workflow
+														for _, child in location:GetChildren() do 
+															if child:HasTag("ZAPPY_TOOLING_SCRIPT") then
+																child.Parent = selectedInstance
+															end
+														end
+													end
+												end
+												selectedInstance:AddTag("ZAPPY_TOOLING_PARENT_INSTANCE")
+												ToolingExportInstance:set(selectedInstance)
+											end
+										end
+									end,
+									[OnEvent "MouseEnter"] = function()
+										ToolingExportButtonHovering:set(true)
+									end,
+									[OnEvent "MouseLeave"] = function()
+										ToolingExportButtonHovering:set(false)
+									end,
+									[Children] = {
+										New "UICorner" {
+											CornerRadius = UDim.new(0, 6)
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},		
 
 			MainButton {
 				Text = Computed(function()
 					return if Busy:get() then "Generating..." else "Generate"
 				end),
-				--Enabled = Ready,-- causes permament discolouration
+				--Enabled = Ready,-- causes permanent discolouration
 				Active = Ready,
 
 				Size = UDim2.new(1, 0, 0, 30),
@@ -328,13 +609,19 @@ do --creates the Zappy plugin
 						ToolingOutput:set(output.tooling)
 					end
 
-					
 					if not ((ServerOutput:get()=="") or (ClientOutput:get()=="")) then
 						if ExportOutput:get() then
-							saveToScript(ServerExportLocation:get(), ServerScriptService, output.server)
-							saveToScript(ClientExportLocation:get(), ReplicatedStorage, output.client)
+							if ServerExportInstance:get() ~= nil and ClientExportInstance:get() ~= nil then
+								local clientScript = saveToScript(ClientExportScriptName:get(), ClientExportInstance:get(), output.client)
+								clientScript:AddTag("ZAPPY_CLIENT_SCRIPT")
+								local serverScript = saveToScript(ServerExportScriptName:get(), ServerExportInstance:get(), output.server)
+								serverScript:AddTag("ZAPPY_SERVER_SCRIPT")
+							else
+								warn("Zappy: Output not saved; Server Export Parent Instance and/or Client Export Parent Instance have not been set.")
+							end
 							if ToolingExists:get() then
-								saveToScript(ToolingExportLocation:get(), ReplicatedStorage, output.tooling)
+								local toolingScript = saveToScript(ToolingExportScriptName:get(), ToolingExportInstance:get() or ReplicatedStorage, output.tooling)
+								toolingScript:AddTag("ZAPPY_TOOLING_SCRIPT")
 							end
 						end
 
@@ -343,9 +630,9 @@ do --creates the Zappy plugin
 								IDL = IDLInput:get(),
 								NoWarnings = NoWarnings:get(),
 								ExportOutput = ExportOutput:get(),
-								ServerExportLocation = ServerExportLocation:get(),
-								ClientExportLocation = ClientExportLocation:get(),
-								ToolingExportLocation = ToolingExportLocation:get()
+								ServerExportScriptName = ServerExportScriptName:get(),
+								ClientExportScriptName = ClientExportScriptName:get(),
+								ToolingExportScriptName = ToolingExportScriptName:get()
 							}
 							local exported = HttpService:JSONEncode(zappySettings)
 
@@ -355,6 +642,11 @@ do --creates the Zappy plugin
 
 					Busy:set(false)
 				end,
+				[Children] = {
+					New "UICorner" {
+						CornerRadius = UDim.new(0, 6)
+					}
+				},
 			},
 			VerticalCollapsibleSection {
 
