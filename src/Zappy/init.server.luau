@@ -232,8 +232,8 @@ do --creates the Zappy plugin
 		)
 	end
 
-	trove:Connect(CollectionService:GetInstanceAddedSignal("ZAPPY_CLIENT_PARENT_INSTANCE"))
-	trove:Connect(CollectionService:GetInstanceRemovedSignal("ZAPPY_CLIENT_PARENT_INSTANCE"))
+	trove:Connect(CollectionService:GetInstanceAddedSignal("ZAPPY_CLIENT_PARENT_INSTANCE"), onClientTaggedInstancesChange)
+	trove:Connect(CollectionService:GetInstanceRemovedSignal("ZAPPY_CLIENT_PARENT_INSTANCE"), onClientTaggedInstancesChange)
 
 	-- update client and server export instances every duration bc Fusion v0.2 state management is really annoying?
 	-- (yes, it is)
