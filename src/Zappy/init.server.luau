@@ -184,7 +184,7 @@ do --creates the Zappy plugin
 		}
 	end
 
-	local function NestedElement(children: { {[any]: any} })
+	local function NestedElement(children: { GuiObject })
 		local centeredChildren = {}
 		for _, element in children do
 			element.Position = UDim2.fromScale(0.5, 0.5)
