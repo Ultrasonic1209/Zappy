@@ -7,3 +7,4 @@ realm = "shared"
 [dependencies]
 Fusion = "elttob/fusion@0.2.0"
 Highlighter = "boatbomber/highlighter@0.8.3"
+Trove = "sleitnick/trove@1.3.0"

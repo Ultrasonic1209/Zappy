@@ -54,6 +54,7 @@ local VerticalCollapsibleSection = require(StudioComponents.VerticalCollapsibleS
 local Checkbox = require(StudioComponents.Checkbox)
 
 local Highlighter = require(Packages.Highlighter)
+local Trove = require(Packages.Trove)
 local Fusion = require(Packages.Fusion)
 
 local New = Fusion.New
@@ -134,9 +135,15 @@ do --creates the Zappy plugin
 
 	local widgetsEnabledObserver = Observer(widgetsEnabled)
 
-	Plugin.Unloading:Connect(widgetsEnabledObserver:onChange(function()
+	local trove = Trove.new()
+
+	trove:Add(widgetsEnabledObserver:onChange(function()
 		enableButton:SetActive(widgetsEnabled:get(false))
 	end))
+
+	Plugin.Unloading:Connect(function()
+		trove:Destroy()
+	end)
 
 	local function ZappyWidget(children)
 		return Widget {
@@ -215,20 +222,29 @@ do --creates the Zappy plugin
 
 	local CurrentSelectionName = Value()
 
+	local function onClientTaggedInstancesChange(_taggedInstance: Instance)
+		local clientTaggedInstances = CollectionService:GetTagged("ZAPPY_CLIENT_PARENT_INSTANCE")
+
+		ClientExportInstance:set(
+			if #clientTaggedInstances == 0 then ReplicatedStorage
+			elseif #clientTaggedInstances == 1 then clientTaggedInstances[1] 
+			else nil
+		)
+	end
+
+	trove:Connect(CollectionService:GetInstanceAddedSignal("ZAPPY_CLIENT_PARENT_INSTANCE"))
+	trove:Connect(CollectionService:GetInstanceRemovedSignal("ZAPPY_CLIENT_PARENT_INSTANCE"))
+
 	-- update client and server export instances every duration bc Fusion v0.2 state management is really annoying?
+	-- (yes, it is)
 	task.spawn(function()
 		while task.wait(0.125) do
-			local clientTaggedInstances: { Instance } = CollectionService:GetTagged("ZAPPY_CLIENT_PARENT_INSTANCE")
 			local serverTaggedInstances: { Instance } = CollectionService:GetTagged("ZAPPY_SERVER_PARENT_INSTANCE")
 			local toolingTaggedInstances: { Instance } = CollectionService:GetTagged("ZAPPY_TOOLING_PARENT_INSTANCE")
 
 			local selectedInstances = game:GetService("Selection"):Get()
 
-			ClientExportInstance:set(
-				if #clientTaggedInstances == 0 then ReplicatedStorage
-				elseif #clientTaggedInstances == 1 then clientTaggedInstances[1] 
-				else nil
-			)
+
 
 			ServerExportInstance:set(
 				if #serverTaggedInstances == 0 then ServerScriptService
