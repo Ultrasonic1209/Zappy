@@ -1,6 +1,6 @@
 [package]
 name = "ultrasonic1209/zappy"
-version = "0.1.11"
+version = "0.1.12"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 
