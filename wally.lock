@@ -14,5 +14,5 @@ dependencies = []
 
 [[package]]
 name = "ultrasonic1209/zappy"
-version = "0.1.14"
+version = "0.1.15"
 dependencies = [["Fusion", "elttob/fusion@0.2.0"], ["Highlighter", "boatbomber/highlighter@0.8.3"]]
