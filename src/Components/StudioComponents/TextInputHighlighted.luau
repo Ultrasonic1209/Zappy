@@ -149,6 +149,8 @@ return function(props: TextInputProperties): TextLabel
 			elseif inputObject.UserInputType == Enum.UserInputType.MouseMovement then
 				isHovering:set(false)
 			end
+			isFocused:set(false)
+			isFocused:set(true)
 		end,
 
 		[Children] = New "UIPadding" {

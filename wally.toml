@@ -1,9 +1,9 @@
 [package]
 name = "ultrasonic1209/zappy"
-version = "0.1.16"
+version = "0.1.17"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 
 [dependencies]
 Fusion = "elttob/fusion@0.2.0"
-Highlighter = "boatbomber/highlighter@0.8.3"
+Highlighter = "boatbomber/highlighter@0.9.0"
