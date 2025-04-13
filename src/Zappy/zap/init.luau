@@ -1,4 +1,6 @@
 --[[
+(ngl original project was made by @hi.kitten but overtaken by @.ultrasonic)
+
 with the contribution of
 
 Fireboltofdeath
@@ -7,7 +9,20 @@ Gas - acomab
 
 ]]
 
-local init_zap = require(script.zapsynth)
+-- this block of code was shamelessly kidnapped
+-- https://github.com/gaymeowing/luauberries/blob/9bf76a3820822dbd59503b62ba5aa36051a608bf/libs/cross/init/init.luau#L12C1-L21C12
+type Runtime = "Roblox" | "Lune" | "Unknown" | "Lute"
+
+local RUNTIME: Runtime = if game and workspace then
+		"Roblox"
+	elseif string.find(_VERSION, "Lute") then
+		"Lute"
+	elseif string.find(_VERSION, "Lune") then
+		"Lune"
+	else
+		"Unknown"
+
+local init_zap = if (RUNTIME == "Roblox") then require("./zap/zapsynth") else require("zapsynth")
 local memory
 
 
@@ -52,7 +67,7 @@ local function getCode(zap_code: string, no_warnings: boolean)
 	buffer.writestring(memory.data, zap_code_inmem, zap_code, #zap_code)
 
 	-- Call zap's run function with the pointer to the zap code
-	local run_return = run(zap_code_inmem, #zap_code, if no_warnings then 1 else 0)
+	local run_return = run(zap_code_inmem, #zap_code, if no_warnings then 1 else 0, 0)
 
 	-- allocate a String for: diagnostics, client output code, server output code  | unsure why it's 16
 	local string_alloc = malloc(16, 1)
@@ -65,14 +80,11 @@ local function getCode(zap_code: string, no_warnings: boolean)
 	}
 	
 	do 
-		funcs.__wbg_get_return_diagnostics(string_alloc, run_return)
+		local ptr, len = funcs.__wbg_get_return_diagnostics(run_return)
 
-		local data = buffer.readu32(memory.data, string_alloc)
-		local len = buffer.readu32(memory.data, string_alloc + 4)
+		local diagnostics = buffer.readstring(memory.data, ptr, len)
 
-		local diagnostics = buffer.readstring(memory.data, data, len)
-
-		free(data, len, 1)
+		free(ptr, len, 1)
 		if #diagnostics ~= 0 then
 			--[[
 			just because something went wrong does not necessarily mean we need to
@@ -93,7 +105,6 @@ local function getCode(zap_code: string, no_warnings: boolean)
 
 	-- Get the return's code field and the code's client/server field
 	local code = get_return_code(run_return)
-	
 	if (code ~= 0) then
 	
 		local client_output = get_code_client(code)
@@ -101,45 +112,33 @@ local function getCode(zap_code: string, no_warnings: boolean)
 		local tooling_output = get_code_tooling(code)
 
 		do
-			get_output_code(string_alloc, client_output)
+			local ptr, len = get_output_code(client_output)
 
-			-- Obtain the pointer to the string's data and the string's length
-			local data = buffer.readu32(memory.data, string_alloc)
-			local len = buffer.readu32(memory.data, string_alloc + 4)
 
 			-- Read the output code string from the buffer and print it
-			output.client = buffer.readstring(memory.data, data, len)
+			output.client = buffer.readstring(memory.data, ptr, len)
 
-			free(data, len, 1)
+			free(ptr, len, 1)
 			funcs.__wbg_output_free(client_output)
 		end
 
 		do
-			get_output_code(string_alloc, server_output)
+			local ptr, len = get_output_code(server_output)
 
-			-- Obtain the pointer to the string's data and the string's length
-			local data = buffer.readu32(memory.data, string_alloc)
-			local len = buffer.readu32(memory.data, string_alloc + 4)
+			output.server = buffer.readstring(memory.data, ptr, len)
 
-			-- Read the output code string from the buffer and print it
-			output.server = buffer.readstring(memory.data, data, len)
-
-			free(data, len, 1)
+			free(ptr, len, 1)
 			funcs.__wbg_output_free(server_output)
 		end
 		
 		if tooling_output ~= 0 then
 			do
-				get_output_code(string_alloc, tooling_output)
-
-				-- Obtain the pointer to the string's data and the string's length
-				local data = buffer.readu32(memory.data, string_alloc)
-				local len = buffer.readu32(memory.data, string_alloc + 4)
+				local ptr, len = get_output_code(tooling_output)
 
 				-- Read the output code string from the buffer and print it
-				output.tooling = buffer.readstring(memory.data, data, len)
+				output.tooling = buffer.readstring(memory.data, ptr, len)
 
-				free(data, len, 1)
+				free(ptr, len, 1)
 				funcs.__wbg_output_free(tooling_output)
 			end
 		end
