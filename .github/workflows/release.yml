@@ -14,8 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Aftman
-        uses: ok-nick/setup-aftman@v0.4.2
+      - name: Setup Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
 
       - name: Install dependencies
         run: wally install
