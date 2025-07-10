@@ -1,0 +1,7 @@
+# enable string requires with roblox for selene to work properly
+base: roblox
+name: roblox_string
+globals:
+  require:
+    args:
+      - type: string

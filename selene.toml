@@ -1,4 +1,4 @@
-std = "roblox"
+std = "roblox_string"
 
 [lints]
 incorrect_standard_library_use = "warn"

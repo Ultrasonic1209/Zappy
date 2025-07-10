@@ -2,4 +2,5 @@
     "luau-lsp.sourcemap.rojoProjectFile": "dev.project.json",
     "luau-lsp.completion.imports.enabled": true,
     "luau-lsp.sourcemap.autogenerate": true,
+    "stylua.targetReleaseVersion": "latest",
 }

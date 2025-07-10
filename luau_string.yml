@@ -1,0 +1,7 @@
+# enable string requires with luau for selene to work properly
+base: luau
+name: luau_string
+globals:
+  require:
+    args:
+      - type: string
